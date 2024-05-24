@@ -1,0 +1,250 @@
+<head>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous" />
+</head>
+
+<div class="row w-75 m-auto">
+
+  <!-- Crear Archivo -->
+  <div class="col-12 col-sm-3 contaienr p-5">
+    <h3>Crear un archivo</h3>
+    <form action="/crear" id="formCrear">
+      <div class="form-group">
+        Nombre del archivo
+        <input name="archivo" class="form-control" id="archivo" required />
+      </div>
+      <div class="form-group">
+        Contenido
+        <textarea name="contenido" class="form-control" id="contenido" cols="30" rows="10" required></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary"
+        style="background-color: #28a745; border-color: #28a745; color: white;">Crear archivo</button>
+
+    </form>
+  </div>
+
+  <!-- Leer Archivo -->
+  <div class="col-12 col-sm-3 contaienr p-5">
+    <h3>Leer un archivo</h3>
+    <form action="/leer" id="formLeer">
+      <div class="form-group">
+        Nombre del archivo
+        <input name="archivo" class="form-control" id="archivo" />
+      </div>
+
+      <button type="submit" class="btn btn-info">Consultar archivo</button>
+    </form>
+  </div>
+
+  <!-- Renombrar Archivo -->
+  <div class="col-12 col-sm-3 contaienr p-5">
+    <h3>Renombrar un archivo</h3>
+    <form action="/renombrar" id="formRenombrar">
+      <div class="form-group">
+        Nombre del archivo
+        <input name="nombre" class="form-control" id="archivo" />
+      </div>
+      <div class="form-group">
+        Nuevo nombre del archivo
+        <input name="nuevoNombre" class="form-control" id="archivo" />
+      </div>
+
+      <button type="submit" class="btn btn-warning">Renombrar archivo</button>
+    </form>
+  </div>
+
+  <!-- Eliminar Archivo -->
+  <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+      const formEliminar = document.getElementById('formEliminar');
+      const labelNombreArchivo = document.getElementById('labelNombreArchivo');
+
+      formEliminar.addEventListener('submit', function (e) {
+        const nombreArchivo = labelNombreArchivo.textContent;
+        const confirmacion = confirm(`¿Está seguro de eliminar el archivo ${nombreArchivo}?`);
+        if (!confirmacion) {
+          e.preventDefault();
+        }
+      });
+    });
+
+  </script>
+
+  <div class="col-12 col-sm-3 contaienr p-5">
+    <h3>Eliminar un archivo</h3>
+    <form action="/eliminar" id="formEliminar">
+      <div class="form-group">
+        Nombre del archivo
+        <input name="archivo" class="form-control" id="archivo" />
+      </div>
+
+      <button type="submit" class="btn btn-danger">Eliminar archivo</button>
+    </form>
+  </div>
+</div>
+
+<section class="container">
+  <hr>
+  <h3 class="text-center">Archivo sólo de lectura</h3>
+  <label for="dataArchivo" id="labelNombreArchivo"></label>
+  <textarea name="dataArchivo" id="dataArchivo" class="w-100" rows="10" readonly></textarea>
+</section>
+
+<script>
+
+  // FORMULARIO PARA CREAR ARCHIVOS //
+  let formCrear = document.getElementById("formCrear");
+
+  formCrear.addEventListener("submit", async (event) => {
+    try {
+      event.preventDefault();
+
+      // Encabezados de la solicitud //
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+
+      let dataForm = new FormData(formCrear);
+
+      const raw = JSON.stringify({
+        "archivo": dataForm.get("archivo"),
+        "contenido": dataForm.get("contenido")
+      });
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow"
+      };
+
+      let response = await fetch("/api/documentos", requestOptions);
+      let data = await response.json();
+
+      if (response.status == 201) {
+        alert("Archivo creado con éxito: " + data.nombreArchivo);
+        formCrear.reset();
+      } else {
+        alert(data.message);
+      }
+
+    } catch (error) {
+      console.log(error);
+      alert("Error al intentar crear el archivo.");
+    }
+
+  });
+
+
+  // LÓGICA FORMULARIO PARA LEER ARCHIVOS //
+
+  let formLeer = document.getElementById("formLeer");
+
+  formLeer.addEventListener("submit", async (event) => {
+    try {
+      event.preventDefault();
+
+      let dataForm = new FormData(formLeer);
+
+      let nombreArchivo = dataForm.get("archivo");
+
+      let response = await fetch("/api/documentos/" + nombreArchivo);
+      let data = await response.json();
+
+      if (response.status == 200) {
+        alert(data.message);
+
+        document.getElementById("labelNombreArchivo").innerText = data.archivo;
+        document.getElementById("dataArchivo").value = data.contenido;
+
+        formLeer.reset();
+      } else {
+        alert(data.message);
+      }
+
+    } catch (error) {
+      console.log(error);
+      alert("Error al intentar leer el archivo.");
+    }
+
+  });
+
+
+  // FORMULARIO PARA RENOMBRAR ARCHIVOS //
+  let formRenombrar = document.getElementById("formRenombrar");
+
+  formRenombrar.addEventListener("submit", async (event) => {
+    try {
+      event.preventDefault();
+
+      // Encabezados de la solicitud //
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+
+      let dataForm = new FormData(formRenombrar);
+
+      const raw = JSON.stringify({
+        "nombre": dataForm.get("nombre"),
+        "nuevoNombre": dataForm.get("nuevoNombre")
+      });
+
+      const requestOptions = {
+        method: "PUT",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow"
+      };
+
+      let response = await fetch("/api/documentos", requestOptions);
+      let data = await response.json();
+
+      if (response.status == 201) {
+
+        alert(data.message);
+        formRenombrar.reset();
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Error al intentar crear el archivo.");
+    }
+  });
+
+
+  // LÓGICA FORMULARIO PARA ELIMINAR ARCHIVOS //
+
+  let formEliminar = document.getElementById("formEliminar");
+
+  formEliminar.addEventListener("submit", async (event) => {
+    try {
+      event.preventDefault();
+
+      let dataForm = new FormData(formEliminar);
+
+      let archivo = dataForm.get("archivo");
+
+      let response = await fetch(`/api/documentos?archivo=${archivo}`, {
+        method: "DELETE"
+      });
+
+      let data = await response.json();
+
+      if (response.status == 200) {
+
+        alert(data.message);
+        formEliminar.reset();
+
+      } else {
+        alert(data.message);
+      }
+
+    } catch (error) {
+      console.log(error);
+      alert("Error al intentar Eliminar el archivo.");
+    }
+
+  });
+
+
+</script>
